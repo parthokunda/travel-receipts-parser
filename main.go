@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"context"
 	"log"
+
 	"github.com/joho/godotenv"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/googleai"
@@ -29,6 +31,7 @@ func get_files(dir string) ([]receiptFile, error) {
 			if err != nil {
 				panic(err)
 			}
+			fmt.Println(filepath.Ext(path))	
 			receipts = append(receipts, receiptFile{info.Name(), path, content})
 		}
 		return nil
@@ -70,7 +73,7 @@ func main() {
 		llms.TextPart(
 			`You have to extract the total fare(ignore currency) and the trip date from pdf. 
 			Please output the information in the following format: DD-MM-YYYY_TotalFare. 
-			For example if the fare is BDT 242.31 and Date 01/01/10 then out output should be 01-01-10_242.31.
+			For example if the fare is BDT 242.31 and Date 01/01/10 then its output should be 01-01-10_242.31.
 			For multiple files, separate each one with semicolon(;). Keep the original file sequence.
 			Example could be 01-01-10_242.31;31-01-11_192.14`))
 
@@ -92,6 +95,14 @@ func main() {
 		for _, choice := range resp.Choices {
 			if len(choice.Content) > 0 {
 				fmt.Println(choice.Content)
+				newNameForFiles := strings.Split(choice.Content, ";")
+				os.MkdirAll("Travel/Processed", os.ModePerm)
+				for index, newFileName := range newNameForFiles {
+					err = os.Rename(receipts[index].path, "Travel/Processed/" + newFileName + ".pdf")
+					if err != nil {
+						panic(err)
+					}
+				}
 			}
 		}
 	}
