@@ -94,9 +94,13 @@ func getDataFromReceipts(receipts []receiptFile) (string, error) {
 
 func renameFilesUsingResponseAndMoveToProcessFolder(receipts []receiptFile, llmResponse string) {
 	newNameForFiles := strings.Split(llmResponse, ";")
-	os.MkdirAll("Travel/Processed", os.ModePerm)
+	processedFolderDir := "Travel/Processed/"
 	for index, newFileName := range newNameForFiles {
-		err := os.Rename(receipts[index].path, "Travel/Processed/" + newFileName + ".pdf")
+		date := strings.Split(newFileName, "_")[0]
+		folderName := processedFolderDir + strings.SplitN(date, "-", 2)[1] + "/"
+		os.MkdirAll(folderName, os.ModePerm)
+		
+		err := os.Rename(receipts[index].path, folderName + newFileName + ".pdf")
 		if err != nil {
 			panic(err)
 		}
