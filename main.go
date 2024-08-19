@@ -44,16 +44,11 @@ func get_files(dir string) ([]receiptFile, error) {
 	return receipts, nil
 }
 
-func main() {
-	receipts, _ := get_files("./Travel")
-	for _, receipt := range receipts {
-		fmt.Println(receipt.path)
-	}
-	
+func getDataFromReceipts(receipts []receiptFile) (string, error) {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file:", err)
-		return
+		return "", err
 	}
 
 	ctx := context.Background()
@@ -61,6 +56,7 @@ func main() {
 	llm, err := googleai.New(ctx, googleai.WithAPIKey(apiKey))
 	if err != nil {
 		log.Fatal(err)
+		return "", err
 	}
 
 	parts := []llms.ContentPart{}
@@ -89,22 +85,37 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if len(resp.Choices) <= 0 {
-		fmt.Println("No message received")
-	} else {
-		for _, choice := range resp.Choices {
-			if len(choice.Content) > 0 {
-				fmt.Println(choice.Content)
-				newNameForFiles := strings.Split(choice.Content, ";")
-				os.MkdirAll("Travel/Processed", os.ModePerm)
-				for index, newFileName := range newNameForFiles {
-					err = os.Rename(receipts[index].path, "Travel/Processed/" + newFileName + ".pdf")
-					if err != nil {
-						panic(err)
-					}
-				}
-			}
+	if len(resp.Choices) != 1 {
+		log.Fatal("response length should be one. but has length " + string(len(resp.Choices)))
+	}
+
+	return resp.Choices[0].Content, nil
+}
+
+func renameFilesUsingResponseAndMoveToProcessFolder(receipts []receiptFile, llmResponse string) {
+	newNameForFiles := strings.Split(llmResponse, ";")
+	os.MkdirAll("Travel/Processed", os.ModePerm)
+	for index, newFileName := range newNameForFiles {
+		err := os.Rename(receipts[index].path, "Travel/Processed/" + newFileName + ".pdf")
+		if err != nil {
+			panic(err)
 		}
 	}
+}
+
+func main() {
+	receipts, _ := get_files("./Travel")
+	for _, receipt := range receipts {
+		fmt.Println(receipt.path)
+	}
+
+	llmResponse, err := getDataFromReceipts(receipts)
+	if err != nil {
+		log.Fatal("LLM Parse Error")
+	}
+
+	fmt.Println(llmResponse)
+
+	renameFilesUsingResponseAndMoveToProcessFolder(receipts, llmResponse)
 	
 }
