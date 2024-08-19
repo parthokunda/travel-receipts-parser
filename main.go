@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"context"
@@ -107,19 +108,50 @@ func renameFilesUsingResponseAndMoveToProcessFolder(receipts []receiptFile, llmR
 	}
 }
 
-func main() {
-	receipts, _ := get_files("./Travel")
-	for _, receipt := range receipts {
-		fmt.Println(receipt.path)
-	}
-
-	llmResponse, err := getDataFromReceipts(receipts)
+func getFareFromFileName(filename string) float64 {
+	filenameWithoutExt := strings.Join(strings.Split(filename, ".")[0:2], ".") // there are two dot, so needed bit of hack
+	fareString := strings.Split(filenameWithoutExt, "_")[1]
+	fare, err := strconv.ParseFloat(fareString, 64)
 	if err != nil {
-		log.Fatal("LLM Parse Error")
+		log.Fatal(err)
 	}
 
-	fmt.Println(llmResponse)
+	return fare
+}
 
-	renameFilesUsingResponseAndMoveToProcessFolder(receipts, llmResponse)
+func calculateTotalFareForMonth(month string){
+	monthFolderDir := "Travel/Processed/" + month
+	directoryEntries, err := os.ReadDir(monthFolderDir)
+	if err != nil {
+		log.Fatal("Directory Not Found")
+	}
+
+	totalFare := 0.0
+	for _, file := range directoryEntries {
+		if !file.IsDir() {
+			totalFare += (getFareFromFileName(file.Name()))
+		}
+	}
+	fmt.Printf("Total Fare: %.2f\n", totalFare)
+
+}
+
+func main() {
+	// receipts, _ := get_files("./Travel")
+	// for _, receipt := range receipts {
+	// 	fmt.Println(receipt.path)
+	// }
+
+	// llmResponse, err := getDataFromReceipts(receipts)
+	// if err != nil {
+	// 	log.Fatal("LLM Parse Error")
+	// }
+
+	// fmt.Println(llmResponse)
+
+	// renameFilesUsingResponseAndMoveToProcessFolder(receipts, llmResponse)
+
+
+	calculateTotalFareForMonth("07-2024")
 	
 }
