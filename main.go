@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -13,31 +12,16 @@ type receiptFile struct {
 	content  []byte
 }
 
-var parseCommand = &cobra.Command{
-	Use:	"parse",
-	Short: 	"parse receipts",
-	Long: 	"parse your travel receipts using LLM",
-	Run: 	func(cmd *cobra.Command, args []string) {
-		parse("./Travel")
+var rootCmd = &cobra.Command{
+	Use:   "tr",
+	Short: "Extract information from travel receipts",
+	Long:  "A program to organize and extract information from your travel receipts",
+	Run: func(cmd *cobra.Command, args []string) {
 	},
 }
 
-func parse(srcPath string) {
-	receipts, _ := get_files(srcPath)
-	for _, receipt := range receipts {
-		fmt.Println(receipt.path)
-	}
-
-	llmResponse, err := getDataFromReceipts(receipts)
-	if err != nil {
-		log.Fatal("LLM Parse Error")
-	}
-
-	fmt.Println(llmResponse)
-}
-
 func ExecuteCommands() {
-	if err := parseCommand.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		log.Fatal("Failed to execute commands")
 	}
 }
