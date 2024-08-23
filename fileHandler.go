@@ -12,14 +12,16 @@ func get_files(dir string) ([]receiptFile, error) {
 	var receipts []receiptFile
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			panic(err)
+			fmt.Printf("Could not read from directory %s\n", dir)
+			os.Exit(1)
 		}
 		if !info.IsDir() {
 			content, err := os.ReadFile(path)
 			if err != nil {
-				panic(err)
+				fmt.Printf("Could not read file %s", path)
+				os.Exit(1)
 			}
-			fmt.Println(filepath.Ext(path))
+			// log.Println(filepath.Ext(path))
 			receipts = append(receipts, receiptFile{info.Name(), path, content})
 		}
 		return nil
@@ -42,7 +44,7 @@ func renameFilesUsingResponseAndMoveToProcessFolder(receipts []receiptFile, llmR
 		
 		err := os.Rename(receipts[index].path, folderName + newFileName + ".pdf")
 		if err != nil {
-			panic(err)
+			fmt.Printf("Failed to move file with name: %s.pdf\n Continuing for other files.\n", newFileName)
 		}
 	}
 }
@@ -62,6 +64,7 @@ func copyAndRenameFile(srcPath, destPath string) error {
 
 	_, err = io.Copy(destFile, srcFile)
 	if err != nil {
+		fmt.Printf("Failed to copy file %s to path %s", srcPath, destPath)
 		return err
 	}
 

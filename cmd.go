@@ -7,14 +7,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var directoryToParse string
+var fileToParse string
+var defaultDir string
+
 var parseCommand = &cobra.Command{
 	Use:   "parse",
-	Short: "parse receipts",
-	Long:  "parse your travel receipts using LLM",
+	Short: "Parse Receipts",
+	Long:  fmt.Sprintf("Parse your Travel Receipts (default \"%s\")", defaultDir),
 	Run: func(cmd *cobra.Command, args []string) {
-		parse("./Backup_Travel")
+		if cmd.Flags().Changed("file") {
+			parse(fileToParse)
+		} else if cmd.Flags().Changed("dir") {
+			parse(directoryToParse)
+		} else {
+			parse(defaultDir)
+		}
 	},
 }
+
 
 func parse(srcPath string) {
 	receipts, _ := get_files(srcPath)
@@ -30,7 +41,19 @@ func parse(srcPath string) {
 	fmt.Println(llmResponse)
 }
 
+var calculateCommand = &cobra.Command{
+	Use:	"calc",
+	Short:	"Calculate your expenses",
+	Run: func(cmd *cobra.Command, args []string) {
+		calculateTotalFareForMonth("08-2024")
+	},
+}
 
 func init() {
+	defaultDir = "./Travel/Unprocessed"
+	rootCmd.AddCommand(calculateCommand)
+
+	parseCommand.Flags().StringVarP(&directoryToParse, "dir", "d", "./Travel/Unprocessed", "Directory to parse");
+	parseCommand.Flags().StringVarP(&fileToParse, "file", "f", "", "File to parse")
 	rootCmd.AddCommand(parseCommand)
 }
