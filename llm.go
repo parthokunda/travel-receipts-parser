@@ -87,7 +87,7 @@ func responseSanityCheck(resp string, receipts []receiptFile) error {
 	pattern := `^(\d{2}-\d{2}-\d{4}_\d+(\.\d+)?)(;\d{2}-\d{2}-\d{4}_\d+(\.\d+)?)*$`
 	regex := regexp.MustCompile(pattern)
 
-	if ! regex.MatchString(resp) {
+	if ! regex.MatchString(strings.TrimSpace(resp)) {
 		return errors.New("invalid response format from llm")
 	}
 	return nil
