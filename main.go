@@ -1,16 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
 
-type receiptFile struct {
-	fileName string
-	path     string
-	content  []byte
-}
 
 var rootCmd = &cobra.Command{
 	Use:   "tr",
@@ -26,7 +24,18 @@ func ExecuteCommands() {
 	}
 }
 
+func initialFolderSetup() {
+	os.MkdirAll("Travel/Unprocessed", os.ModePerm)
+}
+
 func main() {
+	initialFolderSetup()
+	month := time.Now().Month()
+	year := time.Now().Year()
+	
+	month_to_calculate := fmt.Sprintf("%02d-%d", month, year)
+
+	fmt.Println(month_to_calculate)
 	ExecuteCommands()
 	// receipts, _ := get_files("./Travel")
 	// for _, receipt := range receipts {

@@ -30,7 +30,8 @@ var parseCommand = &cobra.Command{
 func parse(srcPath string) {
 	receipts, _ := get_files(srcPath)
 	for _, receipt := range receipts {
-		fmt.Println(receipt.path)
+		// fmt.Println(receipt.path)
+		fmt.Println(receipt.fileType)
 	}
 
 	llmResponse, err := getDataFromReceipts(receipts)
@@ -39,6 +40,11 @@ func parse(srcPath string) {
 	}
 
 	fmt.Println(llmResponse)
+	err = responseSanityCheck(llmResponse, receipts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	renameFilesUsingResponseAndCopyToProcessFolder(receipts, llmResponse)
 }
 
 var calculateCommand = &cobra.Command{

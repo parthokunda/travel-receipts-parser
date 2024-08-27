@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+type receiptFile struct {
+	fileName string
+	path     string
+	content  []byte
+	fileType string
+}
+
+
 func get_files(dir string) ([]receiptFile, error) {
 	var receipts []receiptFile
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -22,7 +30,7 @@ func get_files(dir string) ([]receiptFile, error) {
 				os.Exit(1)
 			}
 			// log.Println(filepath.Ext(path))
-			receipts = append(receipts, receiptFile{info.Name(), path, content})
+			receipts = append(receipts, receiptFile{info.Name(), path, content, filepath.Ext(path)})
 		}
 		return nil
 	})
@@ -34,18 +42,19 @@ func get_files(dir string) ([]receiptFile, error) {
 	return receipts, nil
 }
 
-func renameFilesUsingResponseAndMoveToProcessFolder(receipts []receiptFile, llmResponse string) {
+func renameFilesUsingResponseAndCopyToProcessFolder(receipts []receiptFile, llmResponse string) {
 	newNameForFiles := strings.Split(llmResponse, ";")
+
 	processedFolderDir := "Travel/Processed/"
 	for index, newFileName := range newNameForFiles {
 		date := strings.Split(newFileName, "_")[0]
 		folderName := processedFolderDir + strings.SplitN(date, "-", 2)[1] + "/"
 		os.MkdirAll(folderName, os.ModePerm)
 		
-		err := os.Rename(receipts[index].path, folderName + newFileName + ".pdf")
-		if err != nil {
-			fmt.Printf("Failed to move file with name: %s.pdf\n Continuing for other files.\n", newFileName)
-		}
+		destFilePath := folderName + newFileName + receipts[index].fileType
+		srcFilePath := receipts[index].path
+
+		copyAndRenameFile(srcFilePath, destFilePath)
 	}
 }
 
